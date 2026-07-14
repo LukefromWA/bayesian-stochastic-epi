@@ -57,22 +57,15 @@ model {
   s0_frac  ~ beta(2, 2);
   inv_od   ~ exponential(0.1);
 
-  for (t in 1:n_weeks) {
-    if (expected_cases[t] < 1e3) {
-      cases[t] ~ poisson(expected_cases[t]);
-    } else {
-      cases[t] ~ neg_binomial_2(expected_cases[t], expected_cases[t] * inv_od);
-    }
-  }
+  cases ~ neg_binomial_2(expected_cases, inv_od);
 }
 
 generated quantities {
   vector[n_weeks] log_lik;
+  array[n_weeks] int cases_sim;
   for (t in 1:n_weeks) {
-    if (expected_cases[t] < 1e3) {
-      log_lik[t] = poisson_lpmf(cases[t] | expected_cases[t]);
-    } else {
-      log_lik[t] = neg_binomial_2_lpmf(cases[t] | expected_cases[t], expected_cases[t] * inv_od);
-    }
+    log_lik[t]   = neg_binomial_2_lpmf(cases[t] | expected_cases[t], inv_od);
+    cases_sim[t] = (expected_cases[t] < 1e3 && inv_od > 1e-6)
+                   ? neg_binomial_2_rng(expected_cases[t], inv_od) : -1;
   }
 }
