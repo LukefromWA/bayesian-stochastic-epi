@@ -8,9 +8,9 @@ Developed by **Lucas Anderson and Ian McArthur** for the **Bio 415 Project Analy
 
 ---
 
-## Project Overview
+# Project Overview
 
-Traditional SIR and SEIR models are powerful tools for studying infectious disease dynamics but often rely on simplifying assumptions such as constant transmission rates and exponentially distributed transition times.
+Traditional SIR and SEIR models are widely used for studying infectious disease dynamics but often rely on simplifying assumptions, including constant transmission rates and exponentially distributed transition times.
 
 This project extends stochastic compartmental models by incorporating:
 
@@ -22,7 +22,25 @@ This project extends stochastic compartmental models by incorporating:
 - Partial immunity and reinfection pathways
 - Bayesian parameter estimation with uncertainty quantification
 
-The goal of this framework is to evaluate how increasing biological realism changes parameter inference, model convergence, and predictive performance.
+The goal of this framework is to evaluate how increasing biological realism changes:
+
+- Model convergence
+- Parameter inference
+- Transmission dynamics
+- Predictive performance
+
+---
+
+# Scientific Question
+
+How do assumptions about biological realism and external forcing affect inference of epidemic transmission dynamics?
+
+This framework evaluates:
+
+- Does viral genomic variation improve transmission inference?
+- Does a latent genomic memory state better represent evolutionary pressure than a fixed lag?
+- Do Erlang distributed transition times improve model behavior compared to exponential assumptions?
+- How do vaccination and policy interventions change inferred genomic coupling?
 
 ---
 
@@ -30,7 +48,7 @@ The goal of this framework is to evaluate how increasing biological realism chan
 
 The model suite follows an **8 × 3 factorial experimental design**.
 
-Eight biological model structures are evaluated across three covariate intervention tiers:
+Eight biological model structures are evaluated across three intervention tiers:
 
 | Tier | Description |
 |---|---|
@@ -38,7 +56,7 @@ Eight biological model structures are evaluated across three covariate intervent
 | **NAKED** | Viral genomic forcing + vaccination effects |
 | **FULL** | Viral genomic forcing + vaccination + government stringency |
 
-This design allows the effect of individual biological and policy mechanisms to be evaluated through structured model ablation.
+This design allows individual biological and policy mechanisms to be evaluated through structured model ablation.
 
 ---
 
@@ -48,7 +66,7 @@ This design allows the effect of individual biological and policy mechanisms to 
 |---|---|---|
 | M2 | Lagged forcing SIRS/SEIRS | Baseline model using pre-lagged genomic forcing |
 | M4 | Memory forcing SIRS/SEIRS | Adds a latent genomic memory state |
-| M6 | Erlang SIRS/SEIRS | Uses Erlang distributed latent and infectious periods |
+| M6 | Erlang SIRS/SEIRS | Replaces exponential transitions with Erlang distributed dwell times |
 | M8 | Erlang + waning immunity | Adds partial immunity and reinfection pathways |
 
 ---
@@ -70,15 +88,15 @@ This design allows the effect of individual biological and policy mechanisms to 
 
 # Bayesian Inference Framework
 
-All models are implemented in Stan and fitted using **CmdStanR** with Hamiltonian Monte Carlo through the **No-U-Turn Sampler (NUTS)**.
+All models are implemented in **Stan** and fitted using **CmdStanR** with Hamiltonian Monte Carlo through the **No-U-Turn Sampler (NUTS)**.
 
 The framework performs:
 
 - Bayesian posterior estimation
 - Parameter uncertainty quantification
-- Convergence assessment
 - Posterior predictive evaluation
 - Structural model comparison
+- Convergence assessment
 
 Models were evaluated using:
 
@@ -92,26 +110,76 @@ Models were evaluated using:
 
 ## Genomic Memory Forcing
 
-Higher complexity models replace a fixed genomic lag with a latent memory state:
+Higher complexity models replace a fixed genomic lag with a latent memory state.
 
-$$
+The memory process is defined as:
+
+```math
 A_t=(1-\delta)A_{t-1}+\nu_{signal,t}
-$$
-
-where genomic volatility accumulates over time and decays according to the estimated memory parameter.
-
-The transmission rate is modeled as:
-
-$$
-\beta_t=\beta_0\exp(\alpha_\nu\Theta_t+\alpha_{str}Z_t)
-$$
+```
 
 where:
 
-- $\Theta_t$ represents genomic forcing
-- $Z_t$ represents government stringency
+- $A_t$ represents accumulated genomic pressure
+- $\delta$ controls memory decay
+- $\nu_{signal,t}$ represents the standardized genomic volatility signal
+
+The transmission rate is modeled as:
+
+```math
+\beta_t=\beta_0\exp(\alpha_\nu\Theta_t+\alpha_{str}Z_t)
+```
+
+where:
+
+- $\Theta_t$ represents the active genomic forcing signal
+- $Z_t$ represents standardized government stringency
 - $\alpha_\nu$ estimates genomic coupling strength
 - $\alpha_{str}$ estimates intervention effects
+
+For lower complexity models:
+
+```math
+\Theta_t=\nu_{lag,t}
+```
+
+For memory models:
+
+```math
+\Theta_t=A_t
+```
+
+---
+
+# Disease Progression Models
+
+## Erlang Distributed Dwell Times
+
+Higher complexity models replace memoryless exponential transitions with Erlang distributed progression.
+
+The Erlang structure divides compartments into sequential substages:
+
+```math
+I_1 \rightarrow I_2 \rightarrow I_3 \rightarrow I_4 \rightarrow R
+```
+
+This allows the model to represent more realistic infectious and latent period distributions.
+
+---
+
+# Observation Model
+
+Observed weekly cases are modeled using an overdispersed Negative Binomial observation process:
+
+```math
+y_t \sim NegBin2(\mu_t,\phi^{-1})
+```
+
+where:
+
+- $y_t$ represents observed weekly cases
+- $\mu_t$ represents expected reported infections
+- $\phi$ controls overdispersion
 
 ---
 
@@ -142,14 +210,35 @@ bayesian-stochastic-epi/
 
 ---
 
+# Data Sources
+
+The framework integrates:
+
+- Weekly SARS-CoV-2 case surveillance data
+- Viral genomic volatility signals
+- Vaccination rollout data
+- Government stringency indicators
+
+Models are evaluated across:
+
+- Africa
+- Asia
+- Europe
+- North America
+- South America
+- Oceania
+- Global replicates
+
+---
+
 # Future Extensions
 
 Potential extensions include:
 
-- Estimating immunity parameters instead of fixing them
+- Estimating immunity parameters rather than fixing them
 - Allowing disease parameters to vary across variant periods
 - Incorporating regional mobility and travel networks
-- Extending memory forcing into non-Markovian transmission kernels
+- Extending genomic forcing into non-Markovian memory kernels
 - Linking latent epidemic states with genomic surveillance methods
 
 This project provides a framework for studying how hidden biological processes and external interventions influence observed epidemic dynamics through stochastic state-space modeling.
