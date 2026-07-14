@@ -2,7 +2,7 @@
 
 A Bayesian state-space compartmental modeling framework implemented in **Stan** and **R**, evaluating how biological assumptions, viral genomic signals, vaccination effects, and non-pharmaceutical interventions influence inferred SARS-CoV-2 transmission dynamics across global regions.
 
-**Authors:** Lucas (Luke) Anderson, Ian McArthur
+**Authors:** Lucas Anderson, Ian McArthur
 **Course:** Bio 415 Project Analysis Pipeline
 
 ---
