@@ -1,8 +1,8 @@
 # Bayesian Stochastic State-Space Epidemiological Models
 
-A Bayesian state-space compartmental modeling framework implemented in **Stan** and **R**. This repository contains a 24-model ablation pipeline designed to evaluate how different biological assumptions, viral genomic signals, vaccination effects, and non-pharmaceutical interventions influence inferred epidemic dynamics.
+A Bayesian state-space compartmental modeling framework implemented in **Stan** and **R**. This repository contains a 24-model ablation pipeline designed to evaluate how biological assumptions, viral genomic signals, vaccination effects, and non-pharmaceutical interventions influence inferred epidemic dynamics.
 
-The framework models SARS-CoV-2 transmission across multiple regions while increasing biological complexity through different compartment structures, disease progression assumptions, immunity mechanisms, and external forcing mechanisms.
+The framework models SARS-CoV-2 transmission across multiple global regions while increasing biological complexity through changes in compartment structure, disease progression assumptions, immunity mechanisms, and external forcing mechanisms.
 
 Developed by **Lucas Anderson and Ian McArthur** for the **Bio 415 Project Analysis Pipeline**.
 
@@ -10,19 +10,19 @@ Developed by **Lucas Anderson and Ian McArthur** for the **Bio 415 Project Analy
 
 # Project Overview
 
-Traditional SIR and SEIR models are widely used for studying infectious disease dynamics but often rely on simplifying assumptions, including constant transmission rates and exponentially distributed transition times.
+SIR and SEIR models are widely used to study infectious disease dynamics but often rely on simplifying assumptions such as constant transmission rates and exponentially distributed transition times.
 
 This project extends stochastic compartmental models by incorporating:
 
 - Viral genomic signals as time-dependent transmission drivers
 - Genomic memory effects through latent forcing states
 - Vaccination-driven changes in susceptibility
-- Non-pharmaceutical intervention effects through government stringency
+- Government stringency effects as external intervention forcing
 - Erlang-distributed latent and infectious periods
 - Partial immunity and reinfection pathways
 - Bayesian parameter estimation with uncertainty quantification
 
-The goal of this framework is to evaluate how increasing biological realism changes:
+The goal of this framework is to evaluate how increasing biological realism affects:
 
 - Model convergence
 - Parameter inference
@@ -33,14 +33,14 @@ The goal of this framework is to evaluate how increasing biological realism chan
 
 # Scientific Question
 
-How do assumptions about biological realism and external forcing affect inference of epidemic transmission dynamics?
+How do biological assumptions and external forcing mechanisms affect inference of epidemic transmission dynamics?
 
 This framework evaluates:
 
-- Does viral genomic variation improve transmission inference?
-- Does a latent genomic memory state better represent evolutionary pressure than a fixed lag?
-- Do Erlang distributed transition times improve model behavior compared to exponential assumptions?
-- How do vaccination and policy interventions change inferred genomic coupling?
+- Whether viral genomic variation improves transmission inference
+- Whether genomic memory states better represent evolutionary pressure than fixed lags
+- Whether Erlang distributed dwell times improve epidemic state representation
+- How vaccination and policy interventions alter inferred genomic coupling
 
 ---
 
@@ -60,14 +60,20 @@ This design allows individual biological and policy mechanisms to be evaluated t
 
 ---
 
-# Biological Model Structures
+# Biological Model Hierarchy
+
+The model ladder progressively increases biological realism.
 
 | Model | Structure | Description |
 |---|---|---|
-| M2 | Lagged forcing SIRS/SEIRS | Baseline model using pre-lagged genomic forcing |
-| M4 | Memory forcing SIRS/SEIRS | Adds a latent genomic memory state |
-| M6 | Erlang SIRS/SEIRS | Replaces exponential transitions with Erlang distributed dwell times |
-| M8 | Erlang + waning immunity | Adds partial immunity and reinfection pathways |
+| M1 | SIRS | Baseline susceptible-infected-recovered-susceptible model |
+| M2 | SEIRS | Adds an exposed compartment representing latent infection |
+| M3 | SIRS + Genomic Memory | Adds accumulated genomic forcing |
+| M4 | SEIRS + Genomic Memory | Adds accumulated genomic forcing to SEIRS |
+| M5 | Erlang SIRS | Replaces infectious period with Erlang distributed stages |
+| M6 | Erlang SEIRS | Adds Erlang distributed exposed and infectious periods |
+| M7 | Erlang SIRS + Partial Immunity | Adds reinfection pathway from partially immune recovered individuals |
+| M8 | Erlang SEIRS + Partial Immunity | Adds reinfection through exposed pathway |
 
 ---
 
@@ -83,6 +89,108 @@ This design allows individual biological and policy mechanisms to be evaluated t
 | M6 (Erlang Dwell Times) | SIRS | SIR_Erlang_GENO.stan | SIR_Erlang_GENO_VAX.stan | SIR_Erlang.stan |
 | M8 (Erlang + Waning) | SEIRS | GENO_M8_Erlang_SEIRS_Immfrac.stan | NAKED_M8_Erlang_SEIRS_Immfrac_NoStringency.stan | SEIR_Erlang_waning.stan |
 | M8 (Erlang + Waning) | SIRS | SIR_Erlang_waning_GENO.stan | SIR_Erlang_waning_GENO_VAX.stan | SIR_Erlang_waning.stan |
+
+---
+
+# Model Assumptions
+
+## M1: SIRS Model
+
+The population is assumed to be closed, with no births, deaths, or movement between regions.
+
+Individuals transition between:
+
+```text
+Susceptible → Infected → Recovered → Susceptible
+```
+
+New infections occur through contact between susceptible and infected individuals.
+
+The transmission rate is affected by external forcing signals. Infected individuals recover at a fixed rate, while recovered individuals lose immunity and return to susceptibility.
+
+Vaccination removes susceptible individuals and transfers them into the recovered compartment.
+
+---
+
+## M2: SEIRS Model
+
+The SIRS model is extended by adding an exposed compartment.
+
+Individuals transition through:
+
+```text
+Susceptible → Exposed → Infected → Recovered → Susceptible
+```
+
+The exposed compartment represents the latent period between infection and infectiousness.
+
+---
+
+## M3 / M4: Genomic Memory Models
+
+Instead of using only the previous week's genomic volatility signal, genomic pressure is assumed to accumulate and decay over time.
+
+The latent genomic memory state is:
+
+```math
+A_t=(1-\delta)A_{t-1}+\nu_{signal,t}
+```
+
+where:
+
+- $A_t$ is the accumulated genomic forcing state
+- $\delta$ controls memory decay
+- $\nu_{signal,t}$ is the standardized genomic volatility signal
+
+---
+
+## M5 / M6: Erlang Dwell-Time Models
+
+The infectious and latent periods are modeled using Erlang distributions with:
+
+```math
+k=4
+```
+
+Instead of a single exponential compartment, individuals move through sequential substages.
+
+Example infectious progression:
+
+```text
+I1 → I2 → I3 → I4 → R
+```
+
+This allows the model to represent more realistic variation in disease progression times.
+
+M5 applies Erlang progression to SIRS infectious periods.
+
+M6 applies Erlang progression to both SEIRS exposed and infectious periods.
+
+---
+
+## M7 / M8: Partial Immunity Models
+
+The final model tier introduces partial immunity after recovery.
+
+Instead of all recovered individuals returning directly to susceptibility after immunity wanes, a fraction of individuals retain partial immunity and follow alternative reinfection pathways.
+
+### M7: Erlang SIRS + Partial Immunity
+
+Partially immune individuals bypass full susceptibility:
+
+```math
+R \rightarrow I_1
+```
+
+### M8: Erlang SEIRS + Partial Immunity
+
+Partially immune individuals return through the exposed pathway:
+
+```math
+R \rightarrow E_1
+```
+
+These models evaluate how incomplete immunity and reinfection affect epidemic dynamics.
 
 ---
 
@@ -106,23 +214,7 @@ Models were evaluated using:
 
 ---
 
-# Model Components
-
-## Genomic Memory Forcing
-
-Higher complexity models replace a fixed genomic lag with a latent memory state.
-
-The memory process is defined as:
-
-```math
-A_t=(1-\delta)A_{t-1}+\nu_{signal,t}
-```
-
-where:
-
-- $A_t$ represents accumulated genomic pressure
-- $\delta$ controls memory decay
-- $\nu_{signal,t}$ represents the standardized genomic volatility signal
+# Transmission Model
 
 The transmission rate is modeled as:
 
@@ -132,12 +224,13 @@ The transmission rate is modeled as:
 
 where:
 
-- $\Theta_t$ represents the active genomic forcing signal
-- $Z_t$ represents standardized government stringency
-- $\alpha_\nu$ estimates genomic coupling strength
-- $\alpha_{str}$ estimates intervention effects
+- $\beta_0$ is the baseline transmission rate
+- $\Theta_t$ is the genomic forcing signal
+- $Z_t$ is the standardized government stringency index
+- $\alpha_\nu$ measures genomic coupling
+- $\alpha_{str}$ measures intervention effects
 
-For lower complexity models:
+For lagged forcing models:
 
 ```math
 \Theta_t=\nu_{lag,t}
@@ -151,25 +244,9 @@ For memory models:
 
 ---
 
-# Disease Progression Models
-
-## Erlang Distributed Dwell Times
-
-Higher complexity models replace memoryless exponential transitions with Erlang distributed progression.
-
-The Erlang structure divides compartments into sequential substages:
-
-```math
-I_1 \rightarrow I_2 \rightarrow I_3 \rightarrow I_4 \rightarrow R
-```
-
-This allows the model to represent more realistic infectious and latent period distributions.
-
----
-
 # Observation Model
 
-Observed weekly cases are modeled using an overdispersed Negative Binomial observation process:
+Observed weekly cases are modeled using an overdispersed Negative Binomial observation model:
 
 ```math
 y_t \sim NegBin2(\mu_t,\phi^{-1})
@@ -177,7 +254,7 @@ y_t \sim NegBin2(\mu_t,\phi^{-1})
 
 where:
 
-- $y_t$ represents observed weekly cases
+- $y_t$ represents observed cases
 - $\mu_t$ represents expected reported infections
 - $\phi$ controls overdispersion
 
@@ -217,7 +294,7 @@ The framework integrates:
 - Weekly SARS-CoV-2 case surveillance data
 - Viral genomic volatility signals
 - Vaccination rollout data
-- Government stringency indicators
+- Government stringency indices
 
 Models are evaluated across:
 
