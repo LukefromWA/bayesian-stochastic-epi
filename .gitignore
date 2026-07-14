@@ -1,0 +1,15 @@
+# Stan / CmdStan compiled binaries and intermediate files
+stan/*.exe
+stan/*.hpp
+stan/*.rds
+stan/*.bin
+stan/*.o
+stan/*_compiled
+
+# R Environment & System Files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.DS_Store
+Thumbs.db
