@@ -12,7 +12,7 @@ A Bayesian state-space compartmental modeling framework implemented in **Stan** 
 - **Luke Anderson:** Model design and biological/statistical formulation, Stan/R implementation, simulation and Bayesian inference pipeline, MCMC diagnostics, data processing, results visualization, drafting of the Results section, and portions of the Methods / Model Ladder section.
 - **Ian McArthur:** Manuscript writing for the Abstract, Introduction, Discussion, and Model description sections, and contributions to the project presentation.
 
-Full methodological and results write-up is provided in [`paper/`](./paper) (add PDF/LaTeX source here).
+Full methodological and results write-up is provided in [`paper/`](./paper) .
 
 ---
 
