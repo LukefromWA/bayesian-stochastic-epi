@@ -323,4 +323,4 @@ Models are fit across Africa, Asia, Europe, North America, South America, Oceani
 
 ## Citation
 
-If you use this framework, please cite the accompanying paper (see [`paper/`](./paper)) and this repository.
+If you use this framework, please cite the accompanying paper (see [`Paper/`](./Paper)) and this repository.
