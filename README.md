@@ -97,10 +97,10 @@ Each biological complexity tier pairs an SIRS (odd ID) and SEIRS (even ID) varia
 
 The population is closed (no births, deaths, or migration).
 
-```text
+\`\`\`text
 SIRS:  Susceptible -> Infected -> Recovered -> Susceptible
 SEIRS: Susceptible -> Exposed -> Infected -> Recovered -> Susceptible
-```
+\`\`\`
 
 New infections arise through contact between susceptible and infectious individuals. The transmission rate is modulated by external forcing signals; recovered individuals lose immunity and return to susceptibility. Vaccination moves susceptible individuals directly into the recovered compartment.
 
@@ -134,9 +134,9 @@ where $A_t$ is the accumulated genomic forcing state, $\delta$ is the memory dec
 
 Latent and infectious periods are modeled as Erlang-distributed with $k = 4$ sequential sub-stages instead of a single exponential compartment, each with per-stage rate $k\gamma$ (infectious) or $k\sigma$ (exposed):
 
-```text
+\`\`\`text
 I1 -> I2 -> I3 -> I4 -> R
-```
+\`\`\`
 
 M5/M6 apply this to SIRS infectious periods and SEIRS exposed+infectious periods, respectively. M7/M8 extend M5/M6 with partial immunity.
 
@@ -267,7 +267,7 @@ The genomic memory decay parameter $\delta$ (and its implied half-life) varied w
 
 ## Repository Structure
 
-```text
+\`\`\`text
 bayesian-stochastic-epi/
 ├── data/
 │   ├── model_data_agg_backup.csv
@@ -285,7 +285,7 @@ bayesian-stochastic-epi/
 ├── paper/
 │   └── (full write-up, PDF/LaTeX source)
 └── .gitignore
-```
+\`\`\`
 
 ---
 
